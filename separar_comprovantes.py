@@ -1,99 +1,97 @@
 import os
 import pandas as pd
-import re
 import unicodedata
 from PyPDF2 import PdfWriter, PdfReader
 
+
+# ANTES DE TUDO, JOGAR O SALSICHAO DOS PDF´S NO SITE OCR PDF24 E FORÇAR OCR NA LINGUA PORTUGUESA
+
+
+
 # Caminho para o PDF e a planilha
-arq_pdf = r"C:\Users\mateus.santos.AD\Documents\CONFERENCIACOMLIQUIDO\compjun24.pdf"
-planilha = r"C:\Users\mateus.santos.AD\Documents\CONFERENCIACOMLIQUIDO\liquido.xlsx"
+arq_pdf = r"C:\Users\mateus.santos.AD\Documents\teste_pdfs\salsichao.pdf"
 
-# Usuário escolhe a aba da planilha que irá trabalhar
-user_abas = input("Qual aba você quer abrir? (Exemplo: '199'): ")
-aba_escolhida = pd.read_excel(planilha, sheet_name=user_abas)
-nomes = aba_escolhida["NOME"].tolist()
 
-nomes_nao_encontrados = []
+planilha = r"C:\Users\mateus.santos.AD\Documents\teste_pdfs\sodexo.xlsx"
 
+# Carregando a planilha
+planilha_df = pd.read_excel(planilha)
+cont_encontrados = 0
+codigos_nao_encontrados = []
 cont_nao_encontrados = 0
 
-# Verificando cada nome da coluna de nomes
-for nome in nomes:
-    nome = unicodedata.normalize('NFKD', nome).encode('ASCII', 'ignore').decode('ASCII')
-    partes_nome = nome.split()
-    contador_nome_pessoa = sum(1 for parte in partes_nome if len(parte) > 3)
-    encontrei_nome = False
-    paginas = PdfReader(arq_pdf)
+codigos_doc = planilha_df['Número do Documento'].tolist()
 
-    for pagina in paginas.pages:
-        texto_pagina = pagina.extract_text()
-        texto_pagina_formatada = texto_pagina.replace(".", "").replace(",", "")
+# Procurando cada documento da tabela no PDF
+for codigo in codigos_doc:
 
-        # Verifica se o nome completo está na página
-        if nome in texto_pagina_formatada:
-            conteudo_pdf_novo = PdfWriter()
-            conteudo_pdf_novo.add_page(pagina)
-            nome_novo_pdf = f"{nome}.pdf"
-            encontrei_nome = True
+    # Selecionando a linha correspondente ao código
 
-            with open(nome_novo_pdf, "wb") as novo_pdf:
-                conteudo_pdf_novo.write(novo_pdf)
+    linha_selecionada = planilha_df.loc[planilha_df['Número do Documento'] == codigo]
 
-            print(f"Arquivo {nome_novo_pdf} gerado com sucesso!")
+
+    # Convertendo o código para string antes de remover os 3 primeiros dígitos
+    codigo = str(codigo)[3:]    
+    
+    # Atualizado para remover antes de procurar no PDF
+
+    
+    if not linha_selecionada.empty:
+
+
+        # Obtendo o índice da primeira linha encontrada
+        indice = linha_selecionada.index[0]
+
+        
+        referencia = unicodedata.normalize('NFKD', linha_selecionada['Histórico'].values[0]).encode('ASCII', 'ignore').decode('ASCII')
+        
+        referencia = referencia.replace('*', ' ')
+        referencia = referencia.replace('/', ' ')
+
+
+        obra = unicodedata.normalize('NFKD', linha_selecionada['Centro de Custo'].values[0]).encode('ASCII', 'ignore').decode('ASCII')
+        
+        valor = linha_selecionada['Valor líquido'].values[0]
+        
+
+        paginas = PdfReader(arq_pdf).pages
+        encontrei_codigo = False
+
+        for pagina in paginas:
+            texto_pagina = pagina.extract_text()
+
+            if codigo in texto_pagina:
+                conteudo_pdf_novo = PdfWriter()
+                conteudo_pdf_novo.add_page(pagina)
+                nome_novo_pdf = f"{referencia} -- {obra} -- {valor}.pdf"
+
+                with open(nome_novo_pdf, "wb") as novo_pdf:
+                    conteudo_pdf_novo.write(novo_pdf)
+
+                print(f"Arquivo {codigo} gerado com sucesso!")
+                encontrei_codigo = True
+                cont_encontrados +=1
+                break
+
+        if not encontrei_codigo:
+            codigos_nao_encontrados.append(codigo)
+            cont_nao_encontrados += 1
+            print(f"{codigo} não foi encontrado no PDF!!!")
             
-            break
-
-        # Para nomes com quantidade de palavras maior que 4 // 2
-        elif contador_nome_pessoa >= 2:
-            linha_do_nome = aba_escolhida[aba_escolhida['NOME'] == nome]
 
 
-            # COM ISSO, ESSE ERRO DE INDEX OF SERIA RESOLVIDO???
 
-            if not linha_do_nome.empty:
-                numero_linha = linha_do_nome.index[0]
-                liquido = aba_escolhida.loc[numero_linha, 'LIQUIDO']
 
-                e_sobrenome = ""
-                palavras_encontradas = []
-                for palavra in texto_pagina.split():
-                    if palavra in partes_nome[-1] and len(palavra) > 3:
-                        e_sobrenome = palavra
+print(f"Foram encontrados com sucesso os comprovantes de {cont_encontrados} notas !")
 
-                    if len(palavra) > 3 and palavra in nome.split():
-                        palavras_encontradas.append(palavra)
+# Relatório de não encontrados
+print(f"Os seguintes documentos não foram encontrados: {codigos_nao_encontrados}")
+print(f"No total, não foram encontrados os comprovantes de {cont_nao_encontrados} notas")
 
-                        if len(palavras_encontradas) >= 2 and e_sobrenome in partes_nome[-1] and str(liquido) in texto_pagina_formatada:
-                            conteudo_pdf_novo = PdfWriter()
-                            conteudo_pdf_novo.add_page(pagina)
-                            nome_novo_pdf = f"{nome}.pdf"
-                            encontrei_nome = True
+# Criação de DataFrame com os códigos não encontrados
+df_codigos_nao_encontrados = pd.DataFrame({'CODIGOS NÃO ENCONTRADOS': codigos_nao_encontrados})
 
-                            with open(nome_novo_pdf, "wb") as novo_pdf:
-                                conteudo_pdf_novo.write(novo_pdf)
-
-                            print(f"Arquivo {nome_novo_pdf} gerado com sucesso!")
-                            
-                            break
-
-    if not encontrei_nome:
-        nomes_nao_encontrados.append(nome)
-        cont_nao_encontrados += 1
-        print(f"{nome} não foi encontrado no PDF!!!")
-
-# Contagem total de páginas no PDF
-count_pdf_geral = len(paginas.pages)
-
-print("--------------------------------------------------------------------------------------")
-print(f"No total, existem {count_pdf_geral} comprovantes.")
-print("--------------------------------------------------------------------------------------")
-print("--------------------------------------------------------------------------------------")
-print(f"Os seguintes nomes não foram encontrados: {nomes_nao_encontrados}")
-print(f"No total, não foram encontrados os comprovantes de {cont_nao_encontrados} pessoas!")
-
-# Criação de DataFrame com os nomes não encontrados
-df_nomes_nao_encontrados = pd.DataFrame({'NOMES NÃO ENCONTRADOS': nomes_nao_encontrados})
-diretorio = r'C:\Users\mateus.santos\Documents\CONFERENCIACOMLIQUIDO'
-arquivo_saida = os.path.join(diretorio, '_Erro_Nomes_nao_encontrados_no_diretorio_.xlsx')
-df_nomes_nao_encontrados.to_excel(arquivo_saida, index=False)
-print(f'Foi gerado um arquivo Excel com os nomes não encontrados salvo em: {arquivo_saida}')
+diretorio = r'C:\Users\mateus.santos.AD\Documents\teste_pdfs'
+arquivo_saida = os.path.join(diretorio, 'Codigos_nao_encontrados.xlsx')
+df_codigos_nao_encontrados.to_excel(arquivo_saida, index=False)
+print(f'Foi gerado um arquivo Excel com os códigos não encontrados salvo em: {arquivo_saida}')
