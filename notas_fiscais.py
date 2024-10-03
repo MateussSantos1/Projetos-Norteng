@@ -42,18 +42,19 @@ for codigo in codigos_doc:
         # Agora apenas usando a verificação da expressão regular
         for pagina in paginas:
             texto_pagina = pagina.extract_text()
-            padrao = r"Nro\sFedido\.\:\s+([A-Za-z0-9]{7})"
+            padrao = r"Nro\sFedido\.\:\s+([A-Za-z0-9]{8})"
             
             resultado_mascara = re.search(padrao, texto_pagina)
-            margem_de_erro = 2
+            margem_de_erro = 1
             
             if resultado_mascara:
                 numero_encontrado = resultado_mascara.group(1)  # Corrigido para group(1)
                 
                 # Ver quantos caracteres diferem entre si
-                comparacao = Levenshtein.distance(numero_encontrado, codigo[:7])
-                
-                if comparacao <= margem_de_erro:
+                comparacao = Levenshtein.distance(numero_encontrado, codigo)
+                print(str(valor))
+                valor_formatado = "{:,.2f}".format(valor).replace(",", "X").replace(".", ",").replace("X", ".") 
+                if comparacao <= margem_de_erro and codigo[:1] in numero_encontrado[:1] and str(valor_formatado) in texto_pagina:
                     conteudo_pdf_novo = PdfWriter()
                     conteudo_pdf_novo.add_page(pagina)
                     nome_novo_pdf = f"{referencia} -- {obra} -- {valor}.pdf"
