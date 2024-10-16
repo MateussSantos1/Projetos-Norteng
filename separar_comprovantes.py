@@ -5,7 +5,7 @@ import unicodedata
 from PyPDF2 import PdfWriter, PdfReader
 
 # Caminho para o PDF e a planilha
-arq_pdf = r"C:\Users\mateus.santos.AD\Documents\SEPARAR_NOME_E_LIQUIDO\salsichao.pdf"
+arq_pdf = r"C:\Users\mateus.santos.AD\Documents\SEPARAR_NOME_E_LIQUIDO\comprovantes.pdf"
 planilha = r"C:\Users\mateus.santos.AD\Documents\SEPARAR_NOME_E_LIQUIDO\liquidoagosto.xlsx"
 
 # Usuário escolhe a aba da planilha que irá trabalhar
