@@ -19,26 +19,36 @@ for pagina in paginas:
             # Padrão regex para cinco dígitos, um espaço e um nome com até 7 palavras
             padraoo = r'[0-9]{6}\s+([A-ZÀ-ÿ]+(?:\s+[A-ZÀ-ÿ]+){0,3})'
 
+
+            
             
             resultado_mascara = re.search(padraoo, texto_pagina)
-            print(resultado_mascara)
 
 
             if resultado_mascara:
                 nome_completo = resultado_mascara.group(1)  # Acessa o grupo capturado
 
                 nome_completo_normalizado = unicodedata.normalize('NFKD', nome_completo).encode('ASCII', 'ignore').decode('ASCII')
-                print(f" o {nome_completo} é o nome")  # Exibe o nome completo
-                print(f" o {nome_completo_normalizado} é o nome")
+                print(nome_completo_normalizado)
+                print(nome_completo_normalizado[-1:])
+                sla = nome_completo_normalizado.split(" ")
+
+                print(sla)
+                
+                #REMOVER OS 3 ULTIMOS DIIGITOS
+                if "/n" in sla[-1]:
+                       nome_completo_normalizado = nome_completo_normalizado
+
+
 
                 for pagina2 in paginas2:
                       texto_pagina2 = pagina2.extract_text()
                       texto_pagina2 = unicodedata.normalize('NFKD', texto_pagina2).encode('ASCII', 'ignore').decode('ASCII')
-                      print(texto_pagina2)
+                      
                       if nome_completo_normalizado in texto_pagina2:
-                            print("es´ta")
                             conteudo_pdf_novo = PdfWriter()
                             conteudo_pdf_novo.add_page(pagina)
+                            conteudo_pdf_novo.add_page(pagina2)
                             nome_novo_pdf = f"{nome_completo_normalizado}.pdf"
                             with open(nome_novo_pdf, "wb") as novo_pdf:
                                 conteudo_pdf_novo.write(novo_pdf)
@@ -48,7 +58,7 @@ for pagina in paginas:
                             break
                       
                 if nome_completo_normalizado not in texto_pagina2:
-                            print("nao")
+                            print(f"{nome_completo_normalizado} não encontrado !!!")
                             
 
 
@@ -56,3 +66,4 @@ for pagina in paginas:
                 print("Nenhum nome encontrado.")
         
             # print(texto_pagina)
+
