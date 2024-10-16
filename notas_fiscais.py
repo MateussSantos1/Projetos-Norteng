@@ -6,7 +6,7 @@ import re
 import Levenshtein
 
 # Caminho para o PDF e a planilha
-arq_pdf = r"E:\teste_sodexo\salsichao.pdf"
+arq_pdf = r"E:\teste_sodexo\comprovantes.pdf"
 planilha = r"E:\teste_sodexo\sodexo.xlsx"
 
 # Carregando a planilha
