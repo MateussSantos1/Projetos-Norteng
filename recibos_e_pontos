@@ -66,4 +66,3 @@ for pagina in paginas:
                 print("Nenhum nome encontrado.")
         
             # print(texto_pagina)
-
