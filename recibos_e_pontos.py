@@ -19,8 +19,6 @@ for pagina in paginas:
             # Padrão regex para cinco dígitos, um espaço e um nome com até 7 palavras
             padraoo = r'[0-9]{6}\s+([A-ZÀ-ÿ]+(?:\s+[A-ZÀ-ÿ]+){0,3})'
 
-
-            
             
             resultado_mascara = re.search(padraoo, texto_pagina)
 
